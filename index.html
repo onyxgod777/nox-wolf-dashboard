@@ -4,267 +4,94 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nox Wolf · Private Collection</title>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
   <style>
-    :root {
-      --bg: #0a0a0f;
-      --card: #12121a;
-      --border: #1e1e30;
-      --accent: #6c5ce7;
-      --accent2: #00d2a0;
-      --text: #e0e0f0;
-      --dim: #7a7a9a;
-      --danger: #ff4757;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
-    nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 24px;
-      border-bottom: 1px solid var(--border);
-      background: var(--card);
-    }
-    nav h1 {
-      font-size: 20px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    nav h1 span { color: var(--accent2); }
-    .badge {
-      font-size: 11px;
-      background: var(--accent);
-      color: white;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-weight: 500;
-    }
-    #connect-btn {
-      background: var(--accent);
-      color: white;
-      border: none;
-      padding: 8px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 500;
-      font-size: 14px;
-      transition: opacity .2s;
-    }
-    #connect-btn:hover { opacity: .85; }
-    #connect-btn.connected { background: var(--accent2); }
-    .wallet-addr {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: var(--dim);
-    }
-    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-    .dot.green { background: var(--accent2); }
-    .dot.red { background: var(--danger); }
-
-    #app {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 32px 24px;
-    }
-
-    .hero {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 32px;
-      margin-bottom: 48px;
-    }
-    @media (max-width: 800px) { .hero { grid-template-columns: 1fr; } }
-
-    #model-container {
-      background: var(--card);
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      overflow: hidden;
-      aspect-ratio: 1;
-      position: relative;
-    }
-    #model-container canvas { width: 100% !important; height: 100% !important; display: block; }
-
-    .info h2 { font-size: 28px; margin-bottom: 8px; }
-    .info .subtitle { color: var(--dim); font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
-    .stat-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-    .stat {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-    }
-    .stat .label { font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: .05em; }
-    .stat .value { font-size: 20px; font-weight: 700; margin-top: 4px; }
-    .stat .value .accent { color: var(--accent2); }
-
-    .owner-panel {
-      background: var(--card);
-      border: 1px solid var(--accent);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 32px;
-    }
-    .owner-panel h3 { font-size: 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-    .owner-panel .hint { font-size: 13px; color: var(--dim); margin-bottom: 16px; }
-    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .btn {
-      padding: 10px 24px;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 14px;
-      transition: all .2s;
-    }
-    .btn-primary { background: var(--accent2); color: #000; }
-    .btn-primary:hover { opacity: .85; }
-    .btn-primary:disabled { opacity: .3; cursor: not-allowed; }
-    .btn-secondary { background: var(--border); color: var(--text); }
-    .btn-secondary:hover { background: #2a2a44; }
-    .btn-danger { background: var(--danger); color: white; }
-    .btn-danger:hover { opacity: .85; }
-    .btn-sm { padding: 6px 14px; font-size: 13px; }
-
-    .tx-status {
-      font-size: 13px;
-      padding: 8px 12px;
-      border-radius: 8px;
-      margin-top: 12px;
-      display: none;
-    }
-    .tx-status.show { display: block; }
-    .tx-status.pending { background: rgba(108,92,231,.15); color: var(--accent); border: 1px solid var(--accent); }
-    .tx-status.success { background: rgba(0,210,160,.15); color: var(--accent2); border: 1px solid var(--accent2); }
-    .tx-status.error { background: rgba(255,71,87,.15); color: var(--danger); border: 1px solid var(--danger); }
-
-    .section-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
-
-    .gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 16px;
-    }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-      transition: border-color .2s;
-    }
-    .card:hover { border-color: var(--accent); }
-    .card .token-id {
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-    .card .token-owner {
-      font-size: 11px;
-      color: var(--dim);
-      word-break: break-all;
-    }
-    .card .icon { font-size: 48px; line-height: 1; margin-bottom: 8px; }
-    .card.owned { border-color: var(--accent2); }
-    .card.unminted { opacity: .4; }
-
-    input[type=number] {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 12px;
-      color: var(--text);
-      font-size: 14px;
-      width: 80px;
-    }
-    input[type=number]:focus { outline: none; border-color: var(--accent); }
-
-    .hidden { display: none !important; }
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px 24px;
-      max-width: 400px;
-      font-size: 14px;
-      box-shadow: 0 8px 32px rgba(0,0,0,.5);
-      z-index: 100;
-      transition: transform .3s, opacity .3s;
-      transform: translateY(20px);
-      opacity: 0;
-    }
-    .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.success { border-color: var(--accent2); }
-    .toast.error { border-color: var(--danger); }
+    :root{--bg:#0a0a0f;--card:#12121a;--border:#1e1e30;--accent:#6c5ce7;--accent2:#00d2a0;--text:#e0e0f0;--dim:#7a7a9a;--danger:#ff4757}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    nav{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--card)}
+    nav h1{font-size:20px;font-weight:600;display:flex;align-items:center;gap:10px}
+    nav h1 span{color:var(--accent2)}
+    .badge{font-size:11px;background:var(--accent);color:white;padding:2px 8px;border-radius:10px;font-weight:500}
+    #connect-btn{background:var(--accent);color:white;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-weight:500;font-size:14px;transition:opacity .2s}
+    #connect-btn:hover{opacity:.85}
+    #connect-btn.connected{background:var(--accent2)}
+    #connect-btn:disabled{opacity:.4;cursor:not-allowed}
+    .wallet-addr{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--dim)}
+    .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+    .dot.green{background:var(--accent2)}
+    #app{max-width:1100px;margin:0 auto;padding:32px 24px}
+    .hero{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:48px}
+    @media(max-width:800px){.hero{grid-template-columns:1fr}}
+    #model-container{background:var(--card);border-radius:16px;border:1px solid var(--border);overflow:hidden;aspect-ratio:1;position:relative}
+    #model-container canvas{width:100%!important;height:100%!important;display:block}
+    .info h2{font-size:28px;margin-bottom:8px}
+    .info .subtitle{font-size:14px;color:var(--dim);margin-bottom:24px;line-height:1.6}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+    .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+    .stat .label{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+    .stat .value{font-size:20px;font-weight:700;margin-top:4px}
+    .stat .value .accent{color:var(--accent2)}
+    .owner-panel{background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:20px;margin-bottom:32px}
+    .owner-panel h3{font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+    .owner-panel .hint{font-size:13px;color:var(--dim);margin-bottom:16px}
+    .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .btn{padding:10px 24px;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;transition:all .2s}
+    .btn-primary{background:var(--accent2);color:#000}
+    .btn-primary:hover{opacity:.85}
+    .btn-primary:disabled{opacity:.3;cursor:not-allowed}
+    .btn-secondary{background:var(--border);color:var(--text)}
+    .btn-secondary:hover{background:#2a2a44}
+    .btn-sm{padding:6px 14px;font-size:13px}
+    .tx-status{font-size:13px;padding:8px 12px;border-radius:8px;margin-top:12px;display:none}
+    .tx-status.show{display:block}
+    .tx-status.pending{background:rgba(108,92,231,.15);color:var(--accent);border:1px solid var(--accent)}
+    .tx-status.success{background:rgba(0,210,160,.15);color:var(--accent2);border:1px solid var(--accent2)}
+    .tx-status.error{background:rgba(255,71,87,.15);color:var(--danger);border:1px solid var(--danger)}
+    .section-title{font-size:18px;font-weight:600;margin-bottom:16px}
+    .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;transition:border-color .2s}
+    .card:hover{border-color:var(--accent)}
+    .card .token-id{font-size:13px;font-weight:600;margin-bottom:6px}
+    .card .token-owner{font-size:11px;color:var(--dim);word-break:break-all}
+    .card .icon{font-size:48px;line-height:1;margin-bottom:8px}
+    .card.owned{border-color:var(--accent2)}
+    .card.unminted{opacity:.4}
+    input[type=number],input[type=text]{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px}
+    input:focus{outline:none;border-color:var(--accent)}
+    .hidden{display:none!important}
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 24px;max-width:400px;font-size:14px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:100;transition:transform .3s,opacity .3s;transform:translateY(20px);opacity:0}
+    .toast.show{transform:translateY(0);opacity:1}
+    .toast.success{border-color:var(--accent2)}
+    .toast.error{border-color:var(--danger)}
+    hr{border:0;border-top:1px solid var(--border);margin:16px 0}
   </style>
 </head>
 <body>
-
 <nav>
   <h1>🐺 <span>Nox Wolf</span> <span class="badge">private</span></h1>
-  <div id="wallet-bar" class="wallet-addr hidden">
-    <span class="dot green"></span>
-    <span id="wallet-display"></span>
-  </div>
+  <div id="wallet-bar" class="wallet-addr hidden"><span class="dot green"></span><span id="wallet-display"></span></div>
   <button id="connect-btn">Connect Wallet</button>
 </nav>
-
 <div id="app">
   <div class="hero">
     <div id="model-container"></div>
     <div class="info">
       <h2>Nox Wolf</h2>
-      <p class="subtitle">
-        A low-poly 3D wolf — Nox's spirit animal. Gray fur, glowing blue eyes,
-        pink inner ears. 33 wolves total, privately minted on Polygon.
-      </p>
+      <p class="subtitle">A low-poly 3D wolf — Nox's spirit animal. Gray fur, glowing blue eyes, pink inner ears. 33 wolves total, privately minted on Polygon.</p>
       <div class="stat-grid">
-        <div class="stat">
-          <div class="label">Minted</div>
-          <div class="value"><span id="minted-count" class="accent">—</span> / 33</div>
-        </div>
-        <div class="stat">
-          <div class="label">Your Wolves</div>
-          <div class="value"><span id="your-count">—</span></div>
-        </div>
-        <div class="stat">
-          <div class="label">Supply Left</div>
-          <div class="value" id="supply-left">—</div>
-        </div>
-        <div class="stat">
-          <div class="label">Royalty</div>
-          <div class="value">5%</div>
-        </div>
+        <div class="stat"><div class="label">Minted</div><div class="value"><span id="minted-count" class="accent">—</span> / 33</div></div>
+        <div class="stat"><div class="label">Your Wolves</div><div class="value"><span id="your-count">—</span></div></div>
+        <div class="stat"><div class="label">Supply Left</div><div class="value" id="supply-left">—</div></div>
+        <div class="stat"><div class="label">Royalty</div><div class="value">5%</div></div>
       </div>
     </div>
   </div>
-
   <div id="owner-section" class="owner-panel hidden">
     <h3>🔑 Owner Controls</h3>
-    <p class="hint">Mint more wolves to any wallet. Only you (the contract owner) can do this.</p>
+    <p class="hint">Mint wolves to any wallet. Only you (the contract owner) can do this.</p>
     <div class="row">
       <input type="text" id="mint-to-address" placeholder="0x... wallet address" style="flex:1;min-width:200px;" />
       <button id="mint-btn" class="btn btn-primary">Mint Wolf</button>
@@ -274,60 +101,91 @@
       <input type="number" id="batch-count" value="3" min="1" max="30" />
       <button id="batch-mint-btn" class="btn btn-secondary btn-sm">Batch Mint</button>
     </div>
-    <hr style="border:0;border-top:1px solid var(--border);margin:16px 0;" />
+    <hr />
     <h3>🖼️ Metadata</h3>
-    <p class="hint">Current metadata uses the raw GLB model for images. Update to use the new GIF + PNG previews.</p>
+    <p class="hint">Current metadata uses raw GLB. Update to GIF rotating preview + PNG thumbnail.</p>
     <div class="row">
-      <button id="update-metadata-btn" class="btn btn-secondary btn-sm">Update to GIF/PNG Metadata</button>
+      <button id="update-metadata-btn" class="btn btn-secondary btn-sm">Update to GIF/PNG</button>
     </div>
     <div id="tx-status" class="tx-status"></div>
   </div>
-
   <div class="section-title">🐺 Collection Gallery</div>
   <div id="gallery" class="gallery"></div>
 </div>
-
 <div id="toast" class="toast"></div>
 
-<script type="text/babel">
-const { useState, useEffect, useRef, useCallback } = React;
+<script>
+// ════════════════════════════════════════════════════════════════
+// Nox Wolf Dashboard — Vanilla JS (no dependencies beyond Three.js)
+// ════════════════════════════════════════════════════════════════
 
-// ── Constants ──
 const CONTRACT_ADDR = '0xa40e696a27333733083f57ec34ebba2a328abcc7';
-const CHAIN_ID = 137;
-const RPC = 'https://polygon.drpc.org';
-const GLB_CID = 'ipfs://bafkreigp3vtzaucscia5wdnrv2wo5f2xraj6dfceyz6wmisp6at6qzy7ta';
 const NEW_BASE_URI = 'ipfs://bafybeih2cidkedrjakz4mhlku5j6fom3kjtlkknz5zuffnx36ucvid75pq/';
+const GLB_CID = 'bafkreigp3vtzaucscia5wdnrv2wo5f2xraj6dfceyz6wmisp6at6qzy7ta';
+const RPC = 'https://polygon.drpc.org';
 const OPENSEA = 'https://opensea.io/assets/polygon';
 
-// ERC-721 minimal ABI
-const ABI = [
-  'function totalMinted() view returns (uint256)',
-  'function ownerOf(uint256) view returns (address)',
-  'function tokenURI(uint256) view returns (string)',
-  'function mint(address to)',
-  'function owner() view returns (address)',
-  'function MAX_SUPPLY() view returns (uint256)',
-  'function setBaseURI(string calldata _uri)',
+// Minimal ABI as JSON (we encode manually)
+const ABI_JSON = [
+  {"name":"totalMinted","type":"function","inputs":[],"outputs":[{"type":"uint256"}]},
+  {"name":"ownerOf","type":"function","inputs":[{"type":"uint256"}],"outputs":[{"type":"address"}]},
+  {"name":"tokenURI","type":"function","inputs":[{"type":"uint256"}],"outputs":[{"type":"string"}]},
+  {"name":"mint","type":"function","inputs":[{"type":"address"}]},
+  {"name":"owner","type":"function","inputs":[],"outputs":[{"type":"address"}]},
+  {"name":"MAX_SUPPLY","type":"function","inputs":[],"outputs":[{"type":"uint256"}]},
+  {"name":"setBaseURI","type":"function","inputs":[{"type":"string"}]}
 ];
 
-// ── Utils ──
-const shorten = (addr) => addr ? addr.slice(0,6)+'...'+addr.slice(-4) : '';
-const wait = (ms) => new Promise(r => setTimeout(r, ms));
+// ═══ Hardcoded Keccak-256 function selectors ═══
+// Computed with correct Ethereum Keccak-256:
+const SELECTORS = {
+  totalMinted:'a2309ff8', ownerOf:'6352211e', tokenURI:'c87b56dd',
+  mint:'6a627842', owner:'8da5cb5b', MAX_SUPPLY:'32cb6b0c', setBaseURI:'55f804b3'
+};
 
-let provider, signer, userAddress, isOwner = false;
-let contractRead, contractWrite;
+function abiEncode(method, args) {
+  let enc = '0x' + SELECTORS[method];
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (typeof a === 'bigint' || /^\d+$/.test(String(a)) && !String(a).startsWith('0x')) {
+      enc += BigInt(a).toString(16).padStart(64, '0');
+    } else if (String(a).startsWith('0x') && String(a).length === 42) {
+      enc += '0'.repeat(24) + a.slice(2).toLowerCase();
+    } else {
+      // Dynamic string: offset + length + data padded to 32 bytes
+      const bytes = new TextEncoder().encode(String(a));
+      const offset = 32 * args.length;
+      enc += offset.toString(16).padStart(64, '0');
+      enc += bytes.length.toString(16).padStart(64, '0');
+      for (let b of bytes) enc += b.toString(16).padStart(2, '0');
+      enc = enc.padEnd(Math.ceil(enc.length / 64) * 64, '0');
+    }
+  }
+  return enc;
+}
 
-async function initProvider() {
-  if (window.ethereum) {
-    provider = window.ethereum;
-    return true;
+function abiDecode(types, hex) {
+  const r = hex.replace('0x',''); const res = []; let off = 0;
+  for (const t of types) {
+    if (t==='uint256') { res.push(BigInt('0x'+r.slice(off,off+64))); off+=64; }
+    else if (t==='address') { res.push('0x'+r.slice(off+24,off+64)); off+=64; }
+    else if (t==='string') {
+      const doff = parseInt(r.slice(off,off+64),16)*2;
+      const sl = parseInt(r.slice(doff,doff+64),16);
+      const h = r.slice(doff+64,doff+64+sl*2);
+      res.push(new TextDecoder().decode(new Uint8Array(h.match(/.{1,2}/g).map(b=>parseInt(b,16)))));
+      off+=64;
+    }
   }
-  // Check for OKX Wallet
-  if (window.okxwallet) {
-    provider = window.okxwallet;
-    return true;
-  }
+  return res.length===1 ? res[0] : res;
+}
+
+let provider = null, userAddress = null, isOwner = false;
+
+// ═══ Wallet ═══
+function initProvider() {
+  if (window.ethereum) { provider = window.ethereum; return true; }
+  if (window.okxwallet) { provider = window.okxwallet; return true; }
   return false;
 }
 
@@ -336,416 +194,259 @@ async function connectWallet() {
     const accounts = await provider.request({ method: 'eth_requestAccounts' });
     userAddress = accounts[0];
     const chainId = await provider.request({ method: 'eth_chainId' });
-    if (parseInt(chainId, 16) !== CHAIN_ID) {
-      try {
-        await provider.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0x89' }], // Polygon
-        });
-      } catch(e) {
+    if (parseInt(chainId, 16) !== 137) {
+      await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x89' }] }).catch(async (e) => {
         if (e.code === 4902) {
-          await provider.request({
-            method: 'wallet_addEthereumChain',
-            params: [{
-              chainId: '0x89',
-              chainName: 'Polygon',
-              nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
-              rpcUrls: [RPC],
-              blockExplorerUrls: ['https://polygonscan.com'],
-            }],
-          });
+          await provider.request({ method: 'wallet_addEthereumChain', params: [{
+            chainId: '0x89', chainName: 'Polygon',
+            nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+            rpcUrls: [RPC], blockExplorerUrls: ['https://polygonscan.com'],
+          }]});
         }
-      }
+      });
     }
-
-    // Create ethers-like signer
-    signer = {
-      getAddress: async () => userAddress,
-      signMessage: async (msg) => provider.request({ method: 'personal_sign', params: [msg, userAddress] }),
-    };
-
-    // Update UI
-    document.getElementById('wallet-display').textContent = userAddress;
-    document.getElementById('wallet-bar').classList.remove('hidden');
-    document.getElementById('connect-btn').textContent = 'Connected';
-    document.getElementById('connect-btn').classList.add('connected');
-
-    await checkOwnership();
+    updateUI();
+    await checkOwner();
     await loadStats();
     await loadGallery();
-    return true;
   } catch(e) {
-    console.error('Connect failed:', e);
-    return false;
+    console.error('Connect error:', e);
+    showToast('Connection failed: ' + (e.message?.substring(0,60) || 'unknown'), 'error');
   }
 }
 
-async function checkOwnership() {
-  try {
-    const owner = await callRead('owner');
-    isOwner = owner && owner.toLowerCase() === userAddress.toLowerCase();
-    document.getElementById('owner-section').classList.toggle('hidden', !isOwner);
-  } catch(e) {
-    console.error('Owner check failed:', e);
-  }
+function updateUI() {
+  document.getElementById('wallet-display').textContent = userAddress;
+  document.getElementById('wallet-bar').classList.remove('hidden');
+  const btn = document.getElementById('connect-btn');
+  btn.textContent = 'Connected';
+  btn.className = 'connected';
 }
 
-async function callRead(method, args = []) {
-  const data = ABI.find(a => a.startsWith('function ' + method));
-  if (!data) throw new Error('ABI not found: ' + method);
-  const funcSig = method + '(' + (data.includes('(') ? data.match(/\(([^)]*)\)/)[1] : '') + ')';
+// ═══ Contract Reads ═══
+async function callContract(method, args = []) {
+  const fn = ABI_JSON.find(a => a.name === method);
+  if (!fn) throw new Error('Unknown method: ' + method);
 
-  // Use eth_call via JSON-RPC
-  const encoded = await encodeFunctionCall(method, args);
+  const data = await abiEncode(method, args);
   const result = await provider.request({
     method: 'eth_call',
-    params: [{ to: CONTRACT_ADDR, data: encoded }, 'latest'],
+    params: [{ to: CONTRACT_ADDR, data }, 'latest'],
   });
-
-  return decodeResult(method, result);
+  const types = fn.outputs.map(o => o.type);
+  return abiDecode(types, result);
 }
 
-async function encodeFunctionCall(method, args) {
-  // Use a simplified encoding approach via ethers if available, or fallback to raw
-  // For simplicity, we'll use a helper popup if ethers is available
+async function checkOwner() {
   try {
-    // Check if ethers is loaded
-    if (typeof ethers !== 'undefined') {
-      const iface = new ethers.Interface(ABI);
-      return iface.encodeFunctionData(method, args);
-    }
-  } catch(e) {}
-  throw new Error('Encoding requires ethers.js');
+    const owner = await callContract('owner');
+    isOwner = owner && owner.toLowerCase() === userAddress.toLowerCase();
+    document.getElementById('owner-section').classList.toggle('hidden', !isOwner);
+  } catch(e) { console.error('Owner check:', e); }
 }
 
-async function decodeResult(method, result) {
-  if (typeof ethers !== 'undefined') {
-    const iface = new ethers.Interface(ABI);
-    return iface.decodeFunctionResult(method, result)[0];
-  }
-  return result;
-}
-
-async function sendTx(method, args) {
-  if (!isOwner && (method === 'mint' || method === 'batchMint')) throw new Error('Only owner can mint');
-
-  const iface = new ethers.Interface(ABI);
-  const data = iface.encodeFunctionData(method, args);
-
-  const txHash = await provider.request({
-    method: 'eth_sendTransaction',
-    params: [{
-      from: userAddress,
-      to: CONTRACT_ADDR,
-      data: data,
-    }],
-  });
-
-  return txHash;
-}
-
-// ── Loader ──
 async function loadStats() {
   try {
-    const total = await callRead('totalMinted');
-    const max = await callRead('MAX_SUPPLY');
-    const totalN = Number(total);
-    const maxN = Number(max);
+    const total = Number(await callContract('totalMinted'));
+    const max = Number(await callContract('MAX_SUPPLY'));
+    document.getElementById('minted-count').textContent = total;
+    document.getElementById('supply-left').textContent = max - total;
 
-    document.getElementById('minted-count').textContent = totalN;
-    document.getElementById('supply-left').textContent = maxN - totalN;
-
-    // Count user's wolves
     let userCount = 0;
-    for (let i = 1; i <= totalN; i++) {
+    for (let i = 1; i <= max; i++) {
       try {
-        const owner = await callRead('ownerOf', [BigInt(i)]);
+        const owner = await callContract('ownerOf', [BigInt(i)]);
         if (owner.toLowerCase() === userAddress?.toLowerCase()) userCount++;
       } catch(e) {}
     }
-    document.getElementById('your-count').textContent = userCount;
-  } catch(e) {
-    console.error('Stats load failed:', e);
-  }
+    document.getElementById('your-count').textContent = userCount >= 0 ? userCount : '—';
+  } catch(e) { console.error('Stats:', e); }
 }
 
 async function loadGallery() {
-  const gallery = document.getElementById('gallery');
-  gallery.innerHTML = '<p style="color:var(--dim);">Loading collection...</p>';
-
+  const el = document.getElementById('gallery');
+  el.innerHTML = '<p style="color:var(--dim);">Loading...</p>';
   try {
-    const total = await callRead('totalMinted');
-    const totalN = Number(total);
-
-    gallery.innerHTML = '';
+    const total = Number(await callContract('totalMinted'));
+    el.innerHTML = '';
     for (let i = 1; i <= 33; i++) {
       const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = '<div class="icon">🐺</div>';
-
-      if (i <= totalN) {
+      card.className = 'card' + (i > total ? ' unminted' : '');
+      card.innerHTML = '<div class="icon">🐺</div><div class="token-id">#' + i + (i > total ? ' · unminted' : '') + '</div>';
+      if (i <= total) {
         try {
-          const owner = await callRead('ownerOf', [BigInt(i)]);
+          const owner = await callContract('ownerOf', [BigInt(i)]);
           card.classList.add('owned');
-          card.innerHTML += `<div class="token-id">#${i}</div>`;
-          card.innerHTML += `<div class="token-owner">${shorten(owner)}</div>`;
-          const link = document.createElement('a');
-          link.href = `${OPENSEA}/${CONTRACT_ADDR.toLowerCase()}/${i}`;
-          link.target = '_blank';
-          link.style.fontSize = '11px';
-          link.style.color = 'var(--accent2)';
-          link.textContent = 'OpenSea ↗';
-          card.appendChild(link);
-        } catch(e) {
-          card.classList.add('unminted');
-          card.innerHTML += `<div class="token-id">#${i} · pending</div>`;
-        }
-      } else {
-        card.classList.add('unminted');
-        card.innerHTML += `<div class="token-id">#${i} · unminted</div>`;
+          card.querySelector('.token-id').textContent = '#' + i;
+          card.innerHTML += '<div class="token-owner">' + owner.slice(0,6) + '...' + owner.slice(-4) + '</div>';
+          card.innerHTML += '<a href="' + OPENSEA + '/' + CONTRACT_ADDR.toLowerCase() + '/' + i + '" target="_blank" style="font-size:11px;color:var(--accent2)">OpenSea ↗</a>';
+        } catch(e) {}
       }
-      gallery.appendChild(card);
+      el.appendChild(card);
     }
   } catch(e) {
-    gallery.innerHTML = '<p style="color:var(--danger);">Failed to load collection</p>';
-    console.error('Gallery load failed:', e);
+    el.innerHTML = '<p style="color:var(--danger);">Failed to load</p>';
+    console.error('Gallery:', e);
   }
+}
+
+// ═══ Contract Writes ═══
+async function sendTx(method, args) {
+  const fn = ABI_JSON.find(a => a.name === method);
+  if (!fn) throw new Error('Unknown method: ' + method);
+  const data = await abiEncode(method, args);
+  return await provider.request({
+    method: 'eth_sendTransaction',
+    params: [{ from: userAddress, to: CONTRACT_ADDR, data }],
+  });
+}
+
+async function handleMint() {
+  const addr = document.getElementById('mint-to-address').value.trim();
+  if (!addr || !addr.startsWith('0x') || addr.length !== 42) {
+    showTxStatus('Enter a valid 0x wallet address', 'error'); return;
+  }
+  showTxStatus('Minting...', 'pending');
+  try {
+    const tx = await sendTx('mint', [addr]);
+    showTxStatus('⏳ Tx sent, waiting...', 'pending');
+    await waitForTx(tx);
+    showTxStatus('✅ Minted!', 'success');
+    showToast('Wolf minted! 🐺', 'success');
+    await loadStats(); await loadGallery();
+  } catch(e) { showTxStatus('❌ ' + (e.message?.substring(0,80) || 'Failed'), 'error'); }
+}
+
+async function handleBatchMint() {
+  const addr = document.getElementById('batch-address').value.trim();
+  const count = parseInt(document.getElementById('batch-count').value) || 3;
+  if (!addr || !addr.startsWith('0x') || addr.length !== 42) {
+    showTxStatus('Enter a valid 0x wallet address', 'error'); return;
+  }
+  showTxStatus('Batch minting ' + count + ' wolves...', 'pending');
+  for (let i = 0; i < count; i++) {
+    try {
+      const tx = await sendTx('mint', [addr]);
+      await waitForTx(tx);
+      showTxStatus('✅ ' + (i+1) + '/' + count + ' minted', 'success');
+    } catch(e) { showTxStatus('❌ Stopped at ' + (i+1) + '/' + count + ': ' + (e.message?.substring(0,40)), 'error'); break; }
+  }
+  showToast(count + ' wolves minted!', 'success');
+  await loadStats(); await loadGallery();
+}
+
+async function handleUpdateMetadata() {
+  showTxStatus('Updating metadata... (MetaMask will open)', 'pending');
+  try {
+    const tx = await sendTx('setBaseURI', [NEW_BASE_URI]);
+    showTxStatus('⏳ Tx sent, waiting...', 'pending');
+    await waitForTx(tx);
+    showTxStatus('✅ Metadata updated!', 'success');
+    showToast('Now using GIF + PNG previews!', 'success');
+  } catch(e) { showTxStatus('❌ ' + (e.message?.substring(0,80) || 'Failed'), 'error'); }
+}
+
+async function waitForTx(hash) {
+  for (let i = 0; i < 120; i++) {
+    try {
+      const receipt = await provider.request({ method: 'eth_getTransactionReceipt', params: [hash] });
+      if (receipt && receipt.blockNumber) {
+        if (receipt.status === '0x1') return;
+        throw new Error('Transaction reverted');
+      }
+    } catch(e) { if (e.message?.includes('reverted')) throw e; }
+    await new Promise(r => setTimeout(r, 2000));
+  }
+  throw new Error('Timeout (4 min)');
 }
 
 function showTxStatus(msg, type) {
   const el = document.getElementById('tx-status');
-  el.textContent = msg;
-  el.className = 'tx-status show ' + type;
+  el.textContent = msg; el.className = 'tx-status show ' + type;
 }
 
 function showToast(msg, type) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'toast show ' + type;
+  el.textContent = msg; el.className = 'toast show ' + type;
   setTimeout(() => el.classList.remove('show'), 4000);
 }
 
-// ── 3D Viewer ──
+// ═══ 3D Viewer ═══
 function initModelViewer() {
   const container = document.getElementById('model-container');
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0a0a0f);
-
+  if (!container) return;
+  const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0a0a0f);
   const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
   camera.position.set(2.5, 1.5, 3.5);
-
   const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(container.clientWidth || 400, container.clientHeight || 400);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.2;
+  renderer.setSize(400, 400); renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.2;
   container.appendChild(renderer.domElement);
-
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.05;
-  controls.autoRotate = true;
-  controls.autoRotateSpeed = 2;
-  controls.target.set(0, 0.3, 0);
+  controls.enableDamping = true; controls.dampingFactor = 0.05; controls.autoRotate = true;
+  controls.autoRotateSpeed = 2; controls.target.set(0, 0.3, 0);
 
-  // Lighting
-  const ambient = new THREE.AmbientLight(0x444466, 0.5);
-  scene.add(ambient);
+  scene.add(new THREE.AmbientLight(0x444466, 0.5));
+  const dl = new THREE.DirectionalLight(0xccddff, 2.5); dl.position.set(3,5,4); scene.add(dl);
+  const fl = new THREE.DirectionalLight(0x6c5ce7, 0.8); fl.position.set(-3,1,-2); scene.add(fl);
+  const rl = new THREE.DirectionalLight(0x00d2a0, 0.6); rl.position.set(0,-2,4); scene.add(rl);
 
-  const mainLight = new THREE.DirectionalLight(0xccddff, 2.5);
-  mainLight.position.set(3, 5, 4);
-  scene.add(mainLight);
+  const pl = new THREE.Mesh(new THREE.CircleGeometry(3,32), new THREE.MeshBasicMaterial({color:0x12121a,side:THREE.DoubleSide}));
+  pl.rotation.x = -Math.PI/2; pl.position.y = -0.4; scene.add(pl);
+  const gh = new THREE.GridHelper(4,20,0x1a1a2e,0x1a1a2e); gh.position.y = -0.38; scene.add(gh);
 
-  const fillLight = new THREE.DirectionalLight(0x6c5ce7, 0.8);
-  fillLight.position.set(-3, 1, -2);
-  scene.add(fillLight);
+  new THREE.GLTFLoader().load('https://ipfs.io/ipfs/' + GLB_CID, (gltf) => {
+    const m = gltf.scene; scene.add(m);
+    const box = new THREE.Box3().setFromObject(m);
+    const ctr = box.getCenter(new THREE.Vector3()); m.position.sub(ctr);
+    controls.target.set(0, 0.3, 0);
+  }, undefined, () => {});
 
-  const rimLight = new THREE.DirectionalLight(0x00d2a0, 0.6);
-  rimLight.position.set(0, -2, 4);
-  scene.add(rimLight);
-
-  // Ground shadow
-  const planeGeometry = new THREE.CircleGeometry(3, 32);
-  const planeMaterial = new THREE.MeshBasicMaterial({ color: 0x12121a, side: THREE.DoubleSide });
-  const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-  plane.rotation.x = -Math.PI / 2;
-  plane.position.y = -0.4;
-  scene.add(plane);
-
-  // Grid
-  const gridHelper = new THREE.GridHelper(4, 20, 0x1a1a2e, 0x1a1a2e);
-  gridHelper.position.y = -0.38;
-  scene.add(gridHelper);
-
-  // Load GLB
-  const loader = new THREE.GLTFLoader();
-  loader.load(
-    GLB_CID.replace('ipfs://', 'https://ipfs.io/ipfs/'),
-    (gltf) => {
-      const model = gltf.scene;
-      model.position.set(0, 0, 0);
-      model.scale.set(1, 1, 1);
-      scene.add(model);
-
-      // Center model
-      const box = new THREE.Box3().setFromObject(model);
-      const center = box.getCenter(new THREE.Vector3());
-      model.position.sub(center);
-
-      controls.target.set(0, 0.3, 0);
-    },
-    undefined,
-    (error) => {
-      // Fallback to a simple wolf silhouette if 3D load fails
-      console.error('GLB load error:', error);
-    }
-  );
-
-  function animate() {
-    requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
-  }
+  function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
   animate();
-
-  // Resize handler
-  const resizeObserver = new ResizeObserver(() => {
-    const w = container.clientWidth;
-    const h = container.clientHeight;
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-  });
-  resizeObserver.observe(container);
+  new ResizeObserver(() => {
+    const w = container.clientWidth; const h = container.clientHeight;
+    camera.aspect = w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h);
+  }).observe(container);
 }
 
-// ── Mint handlers ──
-async function handleMint(address) {
-  if (!address || !address.startsWith('0x')) {
-    showTxStatus('Enter a valid wallet address', 'error');
-    return;
-  }
-  showTxStatus('Minting... (waiting for confirmation)', 'pending');
-  try {
-    const txHash = await sendTx('mint', [address]);
-    showTxStatus(`⏳ Tx sent: ${shorten(txHash)}... waiting...`, 'pending');
-    // Wait for tx
-    await waitForTx(txHash);
-    showTxStatus('✅ Minted!', 'success');
-    showToast('Wolf #' + document.getElementById('minted-count').textContent + ' minted!', 'success');
-    await loadStats();
-    await loadGallery();
-  } catch(e) {
-    showTxStatus('❌ ' + (e.message || 'Transaction failed'), 'error');
-    showToast('Mint failed: ' + (e.message?.substring(0, 60) || 'unknown error'), 'error');
-  }
-}
-
-async function handleBatchMint(address, count) {
-  if (!address || !address.startsWith('0x')) {
-    showTxStatus('Enter a valid wallet address', 'error');
-    return;
-  }
-  showTxStatus(`Minting ${count} wolves to ${shorten(address)}...`, 'pending');
-  try {
-    for (let i = 0; i < count; i++) {
-      const txHash = await sendTx('mint', [address]);
-      showTxStatus(`Minting #${i+1}/${count}... tx sent`, 'pending');
-      await waitForTx(txHash);
-      showTxStatus(`✅ Minted ${i+1}/${count}`, 'success');
-    }
-    showToast(`${count} wolves minted!`, 'success');
-    await loadStats();
-    await loadGallery();
-  } catch(e) {
-    showTxStatus('❌ Batch mint failed at step... ' + (e.message?.substring(0, 80)), 'error');
-  }
-}
-
-// ── Metadata update handler ──
-async function handleUpdateMetadata() {
-  // Check current baseURI first
-  try {
-    const currentTokenURI = await callRead('tokenURI', [1n]);
-    if (currentTokenURI.startsWith(NEW_BASE_URI)) {
-      showTxStatus('Metadata is already up to date! ✅', 'success');
-      showToast('Metadata already using GIF/PNG', 'success');
-      return;
-    }
-  } catch(e) { /* ignore - might fail if token not minted */ }
-
-  showTxStatus('Updating metadata URI... (MetaMask will open)', 'pending');
-  try {
-    const txHash = await sendTx('setBaseURI', [NEW_BASE_URI]);
-    showTxStatus(`⏳ Tx sent: ${shorten(txHash)}... waiting for confirmation`, 'pending');
-    await waitForTx(txHash);
-    showTxStatus('✅ Metadata updated! Tokens now use GIF/PNG previews', 'success');
-    showToast('Metadata updated! Refresh gallery to see changes', 'success');
-  } catch(e) {
-    showTxStatus('❌ ' + (e.message || 'Transaction failed'), 'error');
-    showToast('Update failed: ' + (e.message?.substring(0, 60) || 'unknown error'), 'error');
-  }
-}
-
-async function waitForTx(txHash) {
-  return new Promise((resolve, reject) => {
-    const check = setInterval(async () => {
-      try {
-        const receipt = await provider.request({
-          method: 'eth_getTransactionReceipt',
-          params: [txHash],
-        });
-        if (receipt && receipt.blockNumber) {
-          clearInterval(check);
-          if (receipt.status === '0x1') resolve();
-          else reject(new Error('Transaction reverted'));
-        }
-      } catch(e) { /* retry */ }
-    }, 2000);
-    setTimeout(() => { clearInterval(check); reject(new Error('Timeout waiting for tx')); }, 120000);
-  });
-}
-
-// ── Init ──
-window.addEventListener('DOMContentLoaded', async () => {
-  const hasWallet = await initProvider();
+// ═══ Init ═══
+document.addEventListener('DOMContentLoaded', () => {
+  const hasWallet = initProvider();
   if (!hasWallet) {
     document.getElementById('connect-btn').textContent = 'No Wallet Detected';
     document.getElementById('connect-btn').disabled = true;
-  }
-
-  // Check if already connected
-  if (provider) {
+  } else {
+    document.getElementById('connect-btn').onclick = connectWallet;
     provider.on('accountsChanged', (accounts) => {
       if (accounts.length === 0) {
-        userAddress = null;
-        isOwner = false;
+        userAddress = null; isOwner = false;
         document.getElementById('connect-btn').textContent = 'Connect Wallet';
-        document.getElementById('connect-btn').classList.remove('connected');
+        document.getElementById('connect-btn').className = '';
         document.getElementById('wallet-bar').classList.add('hidden');
         document.getElementById('owner-section').classList.add('hidden');
-      } else {
-        userAddress = accounts[0];
-        connectWallet();
-      }
+      } else { userAddress = accounts[0]; connectWallet(); }
     });
-    provider.on('chainChanged', () => window.location.reload());
+    provider.on('chainChanged', () => location.reload());
   }
 
-  document.getElementById('connect-btn').onclick = connectWallet;
-  document.getElementById('mint-btn').onclick = () => {
-    handleMint(document.getElementById('mint-to-address').value);
-  };
-  document.getElementById('batch-mint-btn').onclick = () => {
-    const addr = document.getElementById('batch-address').value;
-    const count = parseInt(document.getElementById('batch-count').value) || 3;
-    handleBatchMint(addr, count);
-  };
+  document.getElementById('mint-btn').onclick = handleMint;
+  document.getElementById('batch-mint-btn').onclick = handleBatchMint;
   document.getElementById('update-metadata-btn').onclick = handleUpdateMetadata;
 
   initModelViewer();
-  await loadStats();
-  await loadGallery();
+  // Gallery stats load only after wallet connects (or show basic info)
+  // Load basic stats without wallet connection
+  (async () => {
+    if (provider) {
+      try {
+        const total = Number(await callContract('totalMinted'));
+        const max = Number(await callContract('MAX_SUPPLY'));
+        document.getElementById('minted-count').textContent = total;
+        document.getElementById('supply-left').textContent = max - total;
+      } catch(e) { /* need wallet for provider */ }
+    }
+  })();
 });
 </script>
 </body>
