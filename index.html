@@ -274,6 +274,12 @@
       <input type="number" id="batch-count" value="3" min="1" max="30" />
       <button id="batch-mint-btn" class="btn btn-secondary btn-sm">Batch Mint</button>
     </div>
+    <hr style="border:0;border-top:1px solid var(--border);margin:16px 0;" />
+    <h3>🖼️ Metadata</h3>
+    <p class="hint">Current metadata uses the raw GLB model for images. Update to use the new GIF + PNG previews.</p>
+    <div class="row">
+      <button id="update-metadata-btn" class="btn btn-secondary btn-sm">Update to GIF/PNG Metadata</button>
+    </div>
     <div id="tx-status" class="tx-status"></div>
   </div>
 
@@ -291,6 +297,7 @@ const CONTRACT_ADDR = '0xa40e696a27333733083f57ec34ebba2a328abcc7';
 const CHAIN_ID = 137;
 const RPC = 'https://polygon.drpc.org';
 const GLB_CID = 'ipfs://bafkreigp3vtzaucscia5wdnrv2wo5f2xraj6dfceyz6wmisp6at6qzy7ta';
+const NEW_BASE_URI = 'ipfs://bafybeih2cidkedrjakz4mhlku5j6fom3kjtlkknz5zuffnx36ucvid75pq/';
 const OPENSEA = 'https://opensea.io/assets/polygon';
 
 // ERC-721 minimal ABI
@@ -301,6 +308,7 @@ const ABI = [
   'function mint(address to)',
   'function owner() view returns (address)',
   'function MAX_SUPPLY() view returns (uint256)',
+  'function setBaseURI(string calldata _uri)',
 ];
 
 // ── Utils ──
@@ -654,6 +662,31 @@ async function handleBatchMint(address, count) {
   }
 }
 
+// ── Metadata update handler ──
+async function handleUpdateMetadata() {
+  // Check current baseURI first
+  try {
+    const currentTokenURI = await callRead('tokenURI', [1n]);
+    if (currentTokenURI.startsWith(NEW_BASE_URI)) {
+      showTxStatus('Metadata is already up to date! ✅', 'success');
+      showToast('Metadata already using GIF/PNG', 'success');
+      return;
+    }
+  } catch(e) { /* ignore - might fail if token not minted */ }
+
+  showTxStatus('Updating metadata URI... (MetaMask will open)', 'pending');
+  try {
+    const txHash = await sendTx('setBaseURI', [NEW_BASE_URI]);
+    showTxStatus(`⏳ Tx sent: ${shorten(txHash)}... waiting for confirmation`, 'pending');
+    await waitForTx(txHash);
+    showTxStatus('✅ Metadata updated! Tokens now use GIF/PNG previews', 'success');
+    showToast('Metadata updated! Refresh gallery to see changes', 'success');
+  } catch(e) {
+    showTxStatus('❌ ' + (e.message || 'Transaction failed'), 'error');
+    showToast('Update failed: ' + (e.message?.substring(0, 60) || 'unknown error'), 'error');
+  }
+}
+
 async function waitForTx(txHash) {
   return new Promise((resolve, reject) => {
     const check = setInterval(async () => {
@@ -708,6 +741,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     const count = parseInt(document.getElementById('batch-count').value) || 3;
     handleBatchMint(addr, count);
   };
+  document.getElementById('update-metadata-btn').onclick = handleUpdateMetadata;
 
   initModelViewer();
   await loadStats();
