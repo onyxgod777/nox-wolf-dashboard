@@ -25,8 +25,13 @@
     #app{max-width:1100px;margin:0 auto;padding:32px 24px}
     .hero{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:48px}
     @media(max-width:800px){.hero{grid-template-columns:1fr}}
-    #model-container{background:var(--card);border-radius:16px;border:1px solid var(--border);overflow:hidden;aspect-ratio:1;position:relative}
+    #model-container{background:radial-gradient(ellipse at center, #0f0f1a 0%, #06060a 100%);border-radius:16px;border:1px solid var(--border);overflow:hidden;aspect-ratio:1;position:relative}
     #model-container canvas{width:100%!important;height:100%!important;display:block}
+    #model-container .loading-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;pointer-events:none;transition:opacity .6s}
+    #model-container .loading-overlay.hidden{opacity:0}
+    #model-container .loading-spinner{width:40px;height:40px;border:2px solid rgba(108,92,231,.2);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:12px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    #model-container .loading-text{font-size:12px;color:var(--dim);letter-spacing:.05em}
     .info h2{font-size:28px;margin-bottom:8px}
     .info .subtitle{font-size:14px;color:var(--dim);margin-bottom:24px;line-height:1.6}
     .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
@@ -78,7 +83,9 @@
 </nav>
 <div id="app">
   <div class="hero">
-    <div id="model-container"></div>
+    <div id="model-container">
+      <div class="loading-overlay" id="loading-overlay"><div class="loading-spinner"></div><div class="loading-text">Summoning wolf...</div></div>
+    </div>
     <div class="info">
       <h2>Nox Wolf</h2>
       <p class="subtitle">A low-poly 3D wolf — Nox's spirit animal. Gray fur, glowing blue eyes, pink inner ears. 33 wolves total, privately minted on Polygon.</p>
@@ -376,38 +383,219 @@ function showToast(msg, type) {
 function initModelViewer() {
   const container = document.getElementById('model-container');
   if (!container) return;
-  const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0a0a0f);
-  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
-  camera.position.set(2.5, 1.5, 3.5);
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(400, 400); renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.2;
+  const loadingOverlay = document.getElementById('loading-overlay');
+
+  // ── Scene ──
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x080812);
+  scene.fog = new THREE.Fog(0x080812, 6, 12);
+
+  // ── Camera ──
+  const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+  camera.position.set(2.8, 1.2, 3.8);
+
+  // ── Renderer ──
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.bias = 0.0001;
   container.appendChild(renderer.domElement);
+
+  // ── Controls ──
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; controls.dampingFactor = 0.05; controls.autoRotate = true;
-  controls.autoRotateSpeed = 2; controls.target.set(0, 0.3, 0);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.06;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 1.8;
+  controls.minDistance = 1.8;
+  controls.maxDistance = 8;
+  controls.target.set(0, 0.25, 0);
 
-  scene.add(new THREE.AmbientLight(0x444466, 0.5));
-  const dl = new THREE.DirectionalLight(0xccddff, 2.5); dl.position.set(3,5,4); scene.add(dl);
-  const fl = new THREE.DirectionalLight(0x6c5ce7, 0.8); fl.position.set(-3,1,-2); scene.add(fl);
-  const rl = new THREE.DirectionalLight(0x00d2a0, 0.6); rl.position.set(0,-2,4); scene.add(rl);
+  // ── Star Field ──
+  const starCount = 800;
+  const starGeo = new THREE.BufferGeometry();
+  const starPos = new Float32Array(starCount * 3);
+  const starSizes = new Float32Array(starCount);
+  for (let i = 0; i < starCount; i++) {
+    starPos[i*3] = (Math.random() - 0.5) * 40;
+    starPos[i*3+1] = (Math.random() - 0.5) * 20;
+    starPos[i*3+2] = (Math.random() - 0.5) * 40 - 10;
+    starSizes[i] = Math.random() * 3 + 0.5;
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  starGeo.setAttribute('size', new THREE.BufferAttribute(starSizes, 1));
+  const starMat = new THREE.PointsMaterial({
+    color: 0x8888bb, size: 0.06, transparent: true, opacity: 0.7,
+    sizeAttenuation: true, blending: THREE.AdditiveBlending, depthWrite: false
+  });
+  const stars = new THREE.Points(starGeo, starMat);
+  stars.position.y = 2;
+  scene.add(stars);
 
-  const pl = new THREE.Mesh(new THREE.CircleGeometry(3,32), new THREE.MeshBasicMaterial({color:0x12121a,side:THREE.DoubleSide}));
-  pl.rotation.x = -Math.PI/2; pl.position.y = -0.4; scene.add(pl);
-  const gh = new THREE.GridHelper(4,20,0x1a1a2e,0x1a1a2e); gh.position.y = -0.38; scene.add(gh);
+  // ── Lighting ──
+  // Hemisphere for soft ambient
+  scene.add(new THREE.HemisphereLight(0x1a1a3e, 0x0a0a12, 0.6));
 
-  new THREE.GLTFLoader().load('https://ipfs.io/ipfs/' + GLB_CID, (gltf) => {
-    const m = gltf.scene; scene.add(m);
-    const box = new THREE.Box3().setFromObject(m);
-    const ctr = box.getCenter(new THREE.Vector3()); m.position.sub(ctr);
-    controls.target.set(0, 0.3, 0);
-  }, undefined, () => {});
+  // Key light — warm, casts shadow
+  const key = new THREE.DirectionalLight(0xffeedd, 2.8);
+  key.position.set(4, 5, 3);
+  key.castShadow = true;
+  key.shadow.mapSize.width = 1024;
+  key.shadow.mapSize.height = 1024;
+  key.shadow.camera.near = 0.5;
+  key.shadow.camera.far = 15;
+  key.shadow.camera.left = -4;
+  key.shadow.camera.right = 4;
+  key.shadow.camera.top = 4;
+  key.shadow.camera.bottom = -4;
+  key.shadow.bias = -0.002;
+  scene.add(key);
 
-  function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+  // Fill — cool purple
+  const fill = new THREE.DirectionalLight(0x8866ff, 1.2);
+  fill.position.set(-3, 1, -2);
+  scene.add(fill);
+
+  // Rim — teal from below/back
+  const rim = new THREE.DirectionalLight(0x00d2a0, 1.5);
+  rim.position.set(0, -2, 4);
+  scene.add(rim);
+
+  // Back edge light
+  const back = new THREE.DirectionalLight(0x4488ff, 0.8);
+  back.position.set(-1, 3, -5);
+  scene.add(back);
+
+  // Top accent
+  const top = new THREE.DirectionalLight(0xaa88ff, 0.4);
+  top.position.set(0, 6, 0);
+  scene.add(top);
+
+  // ── Ground ──
+  const groundGeo = new THREE.CircleGeometry(3.5, 64);
+  const groundMat = new THREE.MeshStandardMaterial({
+    color: 0x0a0a14, roughness: 0.8, metalness: 0.3,
+    side: THREE.DoubleSide
+  });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.42;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // Subtle ring glow on ground
+  const ringGeo = new THREE.RingGeometry(0.3, 0.8, 48);
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: 0x6c5ce7, transparent: true, opacity: 0.15,
+    side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false
+  });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = -0.41;
+  scene.add(ring);
+  const ring2 = new THREE.Mesh(
+    new THREE.RingGeometry(1.0, 1.6, 48),
+    new THREE.MeshBasicMaterial({
+      color: 0x00d2a0, transparent: true, opacity: 0.06,
+      side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false
+    })
+  );
+  ring2.rotation.x = -Math.PI / 2;
+  ring2.position.y = -0.41;
+  scene.add(ring2);
+
+  // Grid
+  const gh = new THREE.GridHelper(6, 24, 0x1e1e3e, 0x1a1a30);
+  gh.position.y = -0.40;
+  scene.add(gh);
+
+  // ── Load Wolf Model ──
+  let wolfModel = null;
+  const gateways = [
+    'https://ipfs.io/ipfs/',
+    'https://gateway.pinata.cloud/ipfs/',
+    'https://cloudflare-ipfs.com/ipfs/',
+    'https://dweb.link/ipfs/'
+  ];
+
+  function tryLoadGateway(idx) {
+    if (idx >= gateways.length) {
+      if (loadingOverlay) {
+        loadingOverlay.querySelector('.loading-text').textContent = 'Model unavailable';
+        loadingOverlay.querySelector('.loading-spinner').style.display = 'none';
+      }
+      return;
+    }
+    new THREE.GLTFLoader().load(gateways[idx] + GLB_CID, (gltf) => {
+      wolfModel = gltf.scene;
+      scene.add(wolfModel);
+
+      // Center model
+      const box = new THREE.Box3().setFromObject(wolfModel);
+      const ctr = box.getCenter(new THREE.Vector3());
+      wolfModel.position.sub(ctr);
+
+      // Enable shadows on all meshes
+      wolfModel.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          // PBR-enhance materials
+          if (child.material) {
+            child.material.roughness = Math.min(child.material.roughness || 0.5, 0.6);
+            child.material.metalness = Math.min(child.material.metalness || 0, 0.2);
+            if (child.material.map) child.material.map.anisotropy = 4;
+            child.material.needsUpdate = true;
+          }
+        }
+      });
+
+      controls.target.set(0, 0.25, 0);
+
+      // Hide loading overlay
+      if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    }, undefined, () => {
+      // On error try next gateway
+      tryLoadGateway(idx + 1);
+    });
+  }
+
+  tryLoadGateway(0);
+
+  // ── Animation ──
+  let time = 0;
+
+  function animate() {
+    requestAnimationFrame(animate);
+    time += 0.005;
+
+    // Subtle camera breathe
+    camera.position.y = 1.2 + Math.sin(time * 0.3) * 0.04;
+
+    // Stars slowly rotate
+    stars.rotation.y += 0.00015;
+
+    // Ring pulse
+    const pulse = 0.12 + Math.sin(time * 0.8) * 0.04;
+    ring.material.opacity = pulse;
+    ring2.material.opacity = pulse * 0.4;
+
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
   animate();
+
+  // ── Resize ──
   new ResizeObserver(() => {
-    const w = container.clientWidth; const h = container.clientHeight;
-    camera.aspect = w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h);
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
   }).observe(container);
 }
 
